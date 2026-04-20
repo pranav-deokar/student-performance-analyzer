@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Student Performance AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <span class="logo-icon">🎓</span>
+                <span class="logo-text">Student Performance AI</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="container">
+            <h1 class="dashboard-title">Student Performance Dashboard</h1>
+            
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="single">Single Prediction</button>
+                <button class="tab-btn" data-tab="batch">Batch Processing</button>
+            </div>
+
+            <!-- Single Prediction Tab -->
+            <div id="single-tab" class="tab-content active">
+                <div class="card">
+                    <h2 class="card-title">Student Information</h2>
+                    <form id="prediction-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="attendance_percentage">Attendance Percentage *</label>
+                                <input type="number" id="attendance_percentage" name="attendance_percentage" 
+                                       min="0" max="100" step="0.1" required placeholder="e.g., 85.5">
+                            </div>
+                            <div class="form-group">
+                                <label for="weekly_self_study_hours">Weekly Self-Study Hours *</label>
+                                <input type="number" id="weekly_self_study_hours" name="weekly_self_study_hours" 
+                                       min="0" max="40" step="0.1" required placeholder="e.g., 10">
+                            </div>
+                            <div class="form-group">
+                                <label for="assignment_submission_rate">Assignment Submission Rate *</label>
+                                <input type="number" id="assignment_submission_rate" name="assignment_submission_rate" 
+                                       min="0" max="1" step="0.01" required placeholder="e.g., 0.85">
+                            </div>
+                            <div class="form-group">
+                                <label for="class_participation">Class Participation (1-5)</label>
+                                <input type="number" id="class_participation" name="class_participation" 
+                                       min="1" max="5" step="0.1" placeholder="e.g., 4">
+                            </div>
+                            <div class="form-group">
+                                <label for="lms_login_frequency">LMS Login Frequency (per week)</label>
+                                <input type="number" id="lms_login_frequency" name="lms_login_frequency" 
+                                       min="0" step="1" placeholder="e.g., 15">
+                            </div>
+                            <div class="form-group">
+                                <label for="videos_watched">Videos Watched</label>
+                                <input type="number" id="videos_watched" name="videos_watched" 
+                                       min="0" step="1" placeholder="e.g., 20">
+                            </div>
+                            <div class="form-group">
+                                <label for="quiz_attempts">Quiz Attempts</label>
+                                <input type="number" id="quiz_attempts" name="quiz_attempts" 
+                                       min="0" step="1" placeholder="e.g., 8">
+                            </div>
+                            <div class="form-group">
+                                <label for="forum_activity">Forum Activity (posts/week)</label>
+                                <input type="number" id="forum_activity" name="forum_activity" 
+                                       min="0" step="0.1" placeholder="e.g., 3">
+                            </div>
+                            <div class="form-group">
+                                <label for="late_submissions_count">Late Submissions Count</label>
+                                <input type="number" id="late_submissions_count" name="late_submissions_count" 
+                                       min="0" step="1" placeholder="e.g., 2">
+                            </div>
+                            <div class="form-group">
+                                <label for="previous_grade">Previous Grade (0-100)</label>
+                                <input type="number" id="previous_grade" name="previous_grade" 
+                                       min="0" max="100" step="0.1" placeholder="e.g., 78.5">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large">Predict Performance</button>
+                    </form>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results-section" class="results-section" style="display: none;">
+                    <div class="results-grid">
+                        <div class="result-card grade-card">
+                            <h3>Predicted Grade</h3>
+                            <div class="result-value" id="predicted-grade">-</div>
+                            <div class="result-subtitle">Confidence: <span id="confidence">-</span>%</div>
+                        </div>
+                        <div class="result-card risk-card">
+                            <h3>Risk Score</h3>
+                            <div class="result-value" id="risk-score">-</div>
+                            <div class="risk-bar">
+                                <div class="risk-fill" id="risk-fill"></div>
+                            </div>
+                        </div>
+                        <div class="result-card cluster-card">
+                            <h3>Student Cluster</h3>
+                            <div class="result-value cluster-value" id="cluster">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Grade Distribution -->
+                    <div class="card">
+                        <h3 class="card-title">Grade Probability Distribution</h3>
+                        <div id="grade-distribution" class="grade-bars"></div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="card">
+                        <h3 class="card-title">Personalized Recommendations</h3>
+                        <div id="recommendations-list"></div>
+                    </div>
+
+                    <!-- Feature Importance -->
+                    <div class="card">
+                        <h3 class="card-title">Key Factors in Prediction</h3>
+                        <div id="feature-importance"></div>
+                    </div>
+
+                    <!-- Export Buttons -->
+                    <div class="export-buttons">
+                        <button id="download-pdf" class="btn btn-secondary">📄 Download PDF Report</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Processing Tab -->
+            <div id="batch-tab" class="tab-content">
+                <div class="card">
+                    <h2 class="card-title">Upload CSV File</h2>
+                    <div class="upload-area" id="upload-area">
+                        <div class="upload-icon">📁</div>
+                        <p class="upload-text">Drag & Drop CSV file here or click to browse</p>
+                        <input type="file" id="csv-file" accept=".csv" style="display: none;">
+                        <button class="btn btn-primary" id="browse-btn">Browse Files</button>
+                    </div>
+                    <div id="file-info" class="file-info" style="display: none;">
+                        <p>Selected: <span id="file-name"></span></p>
+                        <button class="btn btn-primary" id="process-batch">Process Batch</button>
+                    </div>
+                </div>
+
+                <!-- Batch Results -->
+                <div id="batch-results-section" class="batch-results" style="display: none;">
+                    <div class="card">
+                        <h3 class="card-title">Batch Processing Results</h3>
+                        <div class="batch-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Total Students</div>
+                                <div class="stat-value" id="total-students">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">High Risk</div>
+                                <div class="stat-value" id="high-risk-count">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">At Risk Cluster</div>
+                                <div class="stat-value" id="at-risk-cluster">-</div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="batch-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Predicted Grade</th>
+                                        <th>Confidence</th>
+                                        <th>Risk Score</th>
+                                        <th>Cluster</th>
+                                        <th>Recommendations</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="batch-results-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="export-buttons">
+                            <button id="download-batch-csv" class="btn btn-secondary">📊 Download CSV</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p class="loading-text">Processing...</p>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Student Performance AI. Built with Machine Learning and Flask.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
